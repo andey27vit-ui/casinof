@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Casino Mini</title>
+    <style>
+        :root {
+            --bg1: #05060a;
+            --bg2: #0d1020;
+            --stroke: rgba(255,255,255,0.10);
+            --text: #f6f7ff;
+            --muted: #b3bad4;
+            --pink: #ff4fd8;
+            --purple: #8a5cff;
+            --green: #2ef0a3;
+            --gold: #ffd25f;
+            --red: #ff5575;
+            --shadow: 0 20px 60px rgba(0,0,0,.45);
+            --r: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top, rgba(255,79,216,.18), transparent 30%), radial-gradient(circle at 85% 15%, rgba(49,231,255,.14), transparent 26%), radial-gradient(circle at 10% 80%, rgba(46,240,163,.13), transparent 24%), linear-gradient(180deg, var(--bg1), var(--bg2));
+        }
+
+        .app, .shell {
+            width: 100%;
+            height: 100%;
+        }
+
+        .app {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shell {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            padding: 14px 12px 12px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+            .screen.active {
+                display: flex;
+            }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .menu-screen {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 18px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.09);
+            color: var(--text);
+            font-size: .88rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 14px rgba(46,240,163,.9);
+        }
+
+        h1, h2, h3, p {
+            margin: 0;
+        }
+
+        .title {
+            font-size: clamp(2.4rem, 13vw, 4.4rem);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            line-height: 1.04;
+            text-align: center;
+            width: 100%;
+            padding-inline: 10px;
+            background: linear-gradient(90deg, #fff, #ffd25f 32%, #ff4fd8 62%, #31e7ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            max-width: 360px;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.55;
+        }
+
+        .menu-cards {
+            width: 100%;
+            max-width: 420px;
+            display: grid;
+            gap: 14px;
+            margin-top: 6px;
+        }
+
+        .menu-card, .card {
+            border-radius: var(--r);
+            background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+            border: 1px solid var(--stroke);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .menu-card {
+            min-height: 124px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: left;
+            cursor: pointer;
+            transition: transform .16s ease, border-color .16s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .menu-card::before {
+                content: "";
+                position: absolute;
+                inset: -40% -20% auto auto;
+                width: 170px;
+                height: 170px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(255,79,216,.20), transparent 65%);
+                pointer-events: none;
+            }
+
+            .menu-card:nth-child(2)::before {
+                background: radial-gradient(circle, rgba(49,231,255,.18), transparent 65%);
+            }
+
+            .menu-card:active {
+                transform: scale(.98);
+            }
+
+            .menu-card h2 {
+                font-size: 1.35rem;
+            }
+
+            .menu-card p {
+                margin-top: 8px;
+                color: var(--muted);
+                font-size: .95rem;
+                line-height: 1.45;
+                max-width: 290px;
+            }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.10);
+            font-size: .88rem;
+            margin-top: 16px;
+        }
+
+        .game-screen {
+            flex-direction: column;
+            gap: 12px;
+            justify-content: flex-start;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex: 0 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .balance {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.1);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .back-btn, .primary-btn, .secondary-btn, .bet-chip, .bet-option {
+            border: 0;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: transform .15s ease, opacity .15s ease, background .15s ease, border-color .15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            .back-btn:active, .primary-btn:active, .secondary-btn:active, .bet-chip:active, .bet-option:active {
+                transform: scale(.98);
+            }
+
+        .back-btn {
+            padding: 11px 14px;
+            background: rgba(255,255,255,.09);
+            border: 1px solid rgba(255,255,255,.1);
+            flex: 0 0 auto;
+        }
+
+        .game-title {
+            font-size: 1.05rem;
+            letter-spacing: .02em;
+            text-align: center;
+            flex: 1;
+        }
+
+        .game-layout {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .card {
+            padding: 14px;
+            min-height: 0;
+        }
+
+        .slot-card, .roulette-card {
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .reels {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.12)), radial-gradient(circle at top, rgba(255,79,216,.12), transparent 45%);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+
+        .reel {
+            height: 98px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(2.6rem, 12vw, 4rem);
+            background: linear-gradient(180deg, rgba(138,92,255,.28), rgba(255,255,255,.05));
+            border: 1px solid rgba(255,255,255,.10);
+            box-shadow: inset 0 0 20px rgba(0,0,0,.22);
+            user-select: none;
+        }
+
+            .reel.spinning {
+                animation: jitter .11s linear infinite;
+            }
+
+        @keyframes jitter {
+            0% {
+                transform: translateY(-1px) rotate(-1deg);
+            }
+
+            50% {
+                transform: translateY(1px) rotate(1deg);
+            }
+
+            100% {
+                transform: translateY(-1px) rotate(-1deg);
+            }
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .primary-btn, .secondary-btn, .bet-chip, .bet-option {
+            padding: 14px 12px;
+            font-weight: 700;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--pink), var(--purple));
+            box-shadow: 0 14px 30px rgba(138,92,255,.25);
+        }
+
+        .secondary-btn {
+            background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+            border: 1px solid rgba(255,255,255,.10);
+        }
+
+        .result {
+            min-height: 24px;
+            text-align: center;
+            color: var(--gold);
+            font-size: 1.02rem;
+            line-height: 1.35;
+        }
+
+        .bet-section {
+            display: grid;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .section-label {
+            color: var(--muted);
+            font-size: .88rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+
+        .bet-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .bet-option {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.1);
+            padding: 13px 10px;
+            border-radius: 18px;
+        }
+
+            .bet-option.active {
+                transform: scale(1.03);
+                border-color: var(--gold);
+                box-shadow: 0 0 20px rgba(255,210,95,.35);
+            }
+
+        .chips {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .bet-chip {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.1);
+            padding: 10px 8px;
+            font-size: .92rem;
+            border-radius: 16px;
+        }
+
+            .bet-chip.active {
+                background: linear-gradient(135deg, rgba(255,79,216,.30), rgba(138,92,255,.28));
+                border-color: rgba(255,255,255,.45);
+            }
+
+        .roulette-wrap {
+            display: grid;
+            gap: 16px;
+            justify-items: center;
+            align-content: start;
+            padding: 16px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
+            box-shadow: inset 0 0 40px rgba(0,0,0,.4), 0 20px 60px rgba(0,0,0,.5);
+        }
+
+        .wheel-box {
+            position: relative;
+            width: min(80vw, 340px);
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            padding: 12px;
+            background: radial-gradient(circle, rgba(255,255,255,.08), rgba(0,0,0,.6));
+            box-shadow: 0 0 40px rgba(138,92,255,.25);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top: 30px solid var(--gold);
+            filter: drop-shadow(0 0 12px rgba(255,210,95,.9));
+            z-index: 3;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 12px solid rgba(255,255,255,.12);
+            background: conic-gradient( #2ef0a3 0deg 9.729deg, #111827 9.729deg 19.459deg, #ff4d6d 19.459deg 29.188deg, #111827 29.188deg 38.918deg, #ff4d6d 38.918deg 48.648deg, #111827 48.648deg 58.378deg, #ff4d6d 58.378deg 68.108deg, #111827 68.108deg 77.838deg, #ff4d6d 77.838deg 87.568deg, #111827 87.568deg 97.297deg, #ff4d6d 97.297deg 107.027deg, #111827 107.027deg 116.757deg, #ff4d6d 116.757deg 126.486deg, #111827 126.486deg 136.216deg, #ff4d6d 136.216deg 145.946deg, #111827 145.946deg 155.676deg, #ff4d6d 155.676deg 165.405deg, #111827 165.405deg 175.135deg, #ff4d6d 175.135deg 184.865deg, #111827 184.865deg 194.595deg, #ff4d6d 194.595deg 204.324deg, #111827 204.324deg 214.054deg, #ff4d6d 214.054deg 223.784deg, #111827 223.784deg 233.514deg, #ff4d6d 233.514deg 243.243deg, #111827 243.243deg 252.973deg, #ff4d6d 252.973deg 262.703deg, #111827 262.703deg 272.432deg, #ff4d6d 272.432deg 282.162deg, #111827 282.162deg 291.892deg, #ff4d6d 291.892deg 301.622deg, #111827 301.622deg 311.351deg, #ff4d6d 311.351deg 321.081deg, #111827 321.081deg 330.811deg, #ff4d6d 330.811deg 340.541deg, #111827 340.541deg 350.27deg, #ff4d6d 350.27deg 360deg );
+            box-shadow: inset 0 0 30px rgba(0,0,0,.6), 0 20px 60px rgba(0,0,0,.6);
+            transition: transform 3.2s cubic-bezier(.1,.8,.1,1);
+            position: relative;
+        }
+
+            .wheel::after {
+                content: "0";
+                position: absolute;
+                inset: 50% auto auto 50%;
+                transform: translate(-50%, -50%);
+                width: 16%;
+                height: 16%;
+                border-radius: 50%;
+                display: grid;
+                place-items: center;
+                background: radial-gradient(circle, #fff, #c7d0ff 60%, #6b7cff 100%);
+                color: #101320;
+                font-weight: 800;
+                box-shadow: 0 0 24px rgba(138,92,255,.45);
+            }
+
+        .roulette-result {
+            text-align: center;
+            min-height: 24px;
+            color: var(--gold);
+            font-size: 1.02rem;
+        }
+
+        @media (max-width: 420px) {
+            .menu-card {
+                min-height: 118px;
+            }
+
+            .reel {
+                height: 92px;
+            }
+
+            .wheel-box {
+                width: min(86vw, 320px);
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .bet-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chips {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .game-title {
+                font-size: 1rem;
+            }
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 18px;
+            display: grid;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .auth-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+            .field label {
+                color: var(--muted);
+                font-size: .88rem;
+                font-weight: 600;
+            }
+
+        .input {
+            width: 100%;
+            padding: 14px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,.10);
+            background: rgba(255,255,255,.07);
+            color: var(--text);
+            outline: none;
+            font-size: 1rem;
+        }
+
+            .input::placeholder {
+                color: rgba(179,186,212,.72);
+            }
+
+            .input:focus {
+                border-color: rgba(255,255,255,.32);
+                box-shadow: 0 0 0 3px rgba(138,92,255,.16);
+            }
+
+        .user-info, .admin-list {
+            display: grid;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 18px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.09);
+        }
+
+            .user-info small, .admin-list small {
+                color: var(--muted);
+                display: block;
+                line-height: 1.35;
+            }
+
+        .tiny-btn {
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-size: .92rem;
+        }
+
+        .menu-tools {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .admin-row {
+            display: grid;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.09);
+        }
+
+            .admin-row strong {
+                font-size: .98rem;
+            }
+
+            .admin-row span {
+                color: var(--muted);
+                font-size: .9rem;
+            }
+
+
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(3, 5, 10, 0.86);
+            backdrop-filter: blur(14px);
+        }
+
+            .auth-overlay.hidden {
+                display: none !important;
+            }
+
+        .auth-panel {
+            width: min(100%, 420px);
+            border-radius: 28px;
+            padding: 18px;
+            background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+            border: 1px solid rgba(255,255,255,.12);
+            box-shadow: 0 24px 80px rgba(0,0,0,.6);
+        }
+
+            .auth-panel h2 {
+                font-size: 1.35rem;
+                margin-bottom: 8px;
+            }
+
+            .auth-panel p {
+                color: var(--muted);
+                line-height: 1.5;
+                font-size: .95rem;
+                margin-bottom: 14px;
+            }
+
+            .auth-panel .auth-grid {
+                display: grid;
+                gap: 10px;
+            }
+
+            .auth-panel .field {
+                display: grid;
+                gap: 6px;
+            }
+
+            .auth-panel label {
+                color: var(--muted);
+                font-size: .88rem;
+                font-weight: 600;
+            }
+
+            .auth-panel .input {
+                width: 100%;
+                border: 1px solid rgba(255,255,255,.12);
+                background: rgba(0,0,0,.18);
+                color: var(--text);
+                border-radius: 16px;
+                padding: 14px 14px;
+                font-size: 1rem;
+                outline: none;
+            }
+
+                .auth-panel .input:focus {
+                    border-color: rgba(255,255,255,.34);
+                    box-shadow: 0 0 0 3px rgba(138,92,255,.15);
+                }
+
+            .auth-panel .auth-status {
+                min-height: 20px;
+                color: var(--gold);
+                font-size: .95rem;
+                line-height: 1.35;
+                margin-top: 10px;
+            }
+
+            .auth-panel .mini-row {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 12px;
+                flex-wrap: wrap;
+            }
+
+            .auth-panel .mini-note {
+                color: var(--muted);
+                font-size: .84rem;
+            }
+
+        .menu-tools {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .tiny-btn {
+            padding: 11px 14px;
+            border-radius: 14px;
+        }
+
+        .user-info small {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .admin-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .admin-row {
+            padding: 12px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,.10);
+            background: rgba(255,255,255,.05);
+            display: grid;
+            gap: 4px;
+        }
+
+            .admin-row strong {
+                font-size: 1rem;
+            }
+
+            .admin-row span {
+                color: var(--muted);
+                font-size: .9rem;
+                line-height: 1.35;
+            }
+
+        .bonus-timer {
+            min-width: 150px;
+            justify-content: center;
+            text-align: center;
+            font-weight: 700;
+        }
+
+            .bonus-timer.ready {
+                border-color: rgba(46,240,163,.35);
+                box-shadow: 0 0 18px rgba(46,240,163,.18);
+            }
+
+            .bonus-timer.cooldown {
+                border-color: rgba(255,210,95,.28);
+                box-shadow: 0 0 18px rgba(255,210,95,.16);
+            }
+
+        .admin-meta {
+            display: grid;
+            gap: 4px;
+            margin-top: 2px;
+            font-size: .9rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <script>
+        (function () {
+            const memory = Object.create(null);
+            const safeLocalStorage = {
+                getItem(key) {
+                    return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+                },
+                setItem(key, value) {
+                    memory[key] = String(value);
+                },
+                removeItem(key) {
+                    delete memory[key];
+                },
+                clear() {
+                    for (const key of Object.keys(memory)) delete memory[key];
+                },
+                key(index) {
+                    return Object.keys(memory)[index] ?? null;
+                },
+                get length() {
+                    return Object.keys(memory).length;
+                }
+            };
+
+            let usable = null;
+            try {
+                const testKey = '__casino_localStorage_test__';
+                window.localStorage.setItem(testKey, '1');
+                window.localStorage.removeItem(testKey);
+                usable = window.localStorage;
+            } catch (error) {
+                usable = safeLocalStorage;
+            }
+
+            try {
+                Object.defineProperty(window, 'localStorage', {
+                    value: usable,
+                    configurable: true,
+                    enumerable: true,
+                    writable: true
+                });
+            } catch (error) {
+                window.localStorage = usable;
+            }
+
+            try {
+                globalThis.localStorage = usable;
+            } catch (error) {
+                // ignore
+            }
+        })();
+    </script>
+
+
+    <div id="authOverlay" class="auth-overlay hidden" aria-modal="true" role="dialog">
+        <div class="auth-panel">
+            <div class="badge" style="margin-bottom: 10px;"><span class="dot"></span> Доступ к игре</div>
+            <h2>Вход в казино</h2>
+            <p>Введи ник и пароль один раз. Потом игра запомнит тебя и вернёт твой баланс при следующем заходе.</p>
+
+            <div class="auth-grid">
+                <div class="field">
+                    <label for="authNick">Ник</label>
+                    <input class="input" id="authNick" type="text" maxlength="24" placeholder="Например, Neo777" autocomplete="username" />
+                </div>
+                <div class="field">
+                    <label for="authPass">Пароль</label>
+                    <input class="input" id="authPass" type="password" maxlength="32" placeholder="Простой пароль" autocomplete="current-password" />
+                </div>
+                <button class="primary-btn" id="authEnter">Войти / зарегистрироваться</button>
+            </div>
+
+            <div class="auth-status" id="authStatus"></div>
+            <div class="mini-row">
+                <span class="mini-note">Баланс и аккаунт сохраняются в этом браузере.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="app">
+        <div class="shell">
+            <section id="menuScreen" class="screen active menu-screen">
+                <div class="badge"><span class="dot"></span> Mini Casino</div>
+                <h1 class="title">Casino</h1>
+                <p class="subtitle">Выбирай игру ниже. Всё сделано под телефон, с балансом и ставками.</p>
+                <div class="pill bonus-timer" data-bonus-timer>Бонус: не активен</div>
+
+                <div class="menu-cards">
+                    <div class="menu-card" id="goSlots" role="button" tabindex="0">
+                        <div>
+                            <h2>Слот машина</h2>
+                            <p>Три барабана, ставка из баланса и случайный итог.</p>
+                        </div>
+                        <div class="pill"><span class="dot"></span> Играть</div>
+                    </div>
+
+                    <div class="menu-card" id="goRoulette" role="button" tabindex="0">
+                        <div>
+                            <h2>Рулетка</h2>
+                            <p>Ставка на цвет и выплата по коэффициенту.</p>
+                        </div>
+                        <div class="pill"><span class="dot"></span> Играть</div>
+                    </div>
+                </div>
+
+                <div class="menu-tools">
+                    <button class="secondary-btn tiny-btn" id="openAdmin">Админка</button>
+                </div>
+
+            </section>
+
+            <section id="slotScreen" class="screen game-screen hidden">
+                <div class="topbar">
+                    <button class="back-btn" data-back>←</button>
+                    <h2 class="game-title">Слот машина</h2>
+                    <div class="balance" id="slotBalanceTop">Баланс: 1000 ₽</div>
+                    <div class="balance bonus-timer" data-bonus-timer>Бонус: не активен</div>
+                </div>
+
+                <div class="game-layout">
+                    <div class="card slot-card">
+                        <div class="reels">
+                            <div class="reel" id="reel1">🍒</div>
+                            <div class="reel" id="reel2">🍋</div>
+                            <div class="reel" id="reel3">🍇</div>
+                        </div>
+
+                        <div class="bet-section">
+                            <div class="section-label">Сумма ставки</div>
+                            <div class="chips" id="slotBetChips">
+                                <button class="bet-chip" data-bet="1">1</button>
+                                <button class="bet-chip" data-bet="2">2</button>
+                                <button class="bet-chip" data-bet="5">5</button>
+                                <button class="bet-chip" data-bet="10">10</button>
+                                <button class="bet-chip" data-bet="25">25</button>
+                                <button class="bet-chip active" data-bet="50">50</button>
+                                <button class="bet-chip" data-bet="100">100</button>
+                                <button class="bet-chip" data-bet="250">250</button>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="primary-btn" id="spinSlots">Крутить</button>
+                            <button class="secondary-btn" id="randomSlots">Сменить</button>
+                        </div>
+
+                        <div class="result" id="slotResult"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="rouletteScreen" class="screen game-screen hidden">
+                <div class="topbar">
+                    <button class="back-btn" data-back>←</button>
+                    <h2 class="game-title">Рулетка</h2>
+                    <div class="balance" id="rouletteBalanceTop">Баланс: 1000 ₽</div>
+                    <div class="balance bonus-timer" data-bonus-timer>Бонус: не активен</div>
+                </div>
+
+                <div class="game-layout">
+                    <div class="card roulette-wrap">
+                        <div class="bet-section" style="width:100%;">
+                            <div class="section-label">Ставка на цвет</div>
+                            <div class="bet-grid" id="rouletteColorButtons">
+                                <button class="bet-option active" data-color="red" style="background: rgba(255,85,117,.18);">Красное ×2</button>
+                                <button class="bet-option" data-color="black" style="background: rgba(29,34,54,.9);">Чёрное ×2</button>
+                                <button class="bet-option" data-color="green" style="background: rgba(46,240,163,.18); grid-column: 1 / -1;">Зелёное ×8</button>
+                            </div>
+                        </div>
+
+                        <div class="bet-section" style="width:100%;">
+                            <div class="section-label">Сумма ставки</div>
+                            <div class="chips" id="rouletteBetChips">
+                                <button class="bet-chip" data-bet="1">1</button>
+                                <button class="bet-chip" data-bet="2">2</button>
+                                <button class="bet-chip" data-bet="5">5</button>
+                                <button class="bet-chip" data-bet="10">10</button>
+                                <button class="bet-chip" data-bet="25">25</button>
+                                <button class="bet-chip active" data-bet="50">50</button>
+                                <button class="bet-chip" data-bet="100">100</button>
+                                <button class="bet-chip" data-bet="250">250</button>
+                            </div>
+                        </div>
+
+                        <div class="wheel-box">
+                            <div class="pointer"></div>
+                            <div class="wheel" id="wheel"></div>
+                        </div>
+
+                        <div class="actions">
+                            <button class="primary-btn" id="spinRoulette">Крутить</button>
+                            <button class="secondary-btn" id="randomRoulette">Случайно</button>
+                        </div>
+
+                        <div class="roulette-result" id="rouletteResult"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="adminScreen" class="screen game-screen hidden">
+                <div class="topbar">
+                    <button class="back-btn" data-back-admin>←</button>
+                    <h2 class="game-title">Админ-экран</h2>
+                    <div class="balance">Только для тебя</div>
+                </div>
+
+                <div class="game-layout">
+                    <div class="card auth-card">
+                        <div>
+                            <h2>Зарегистрированные игроки</h2>
+                            <p>Список берётся из браузера этого устройства. Для настоящей приватности нужен сервер, но для GitHub Pages это работает как скрытый локальный экран.</p>
+                        </div>
+                        <div class="admin-list" id="adminUsersList">
+                            <small>Пока никого нет.</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        const START_BALANCE = 1000;
+        const SECTOR_COUNT = 37;
+        const SECTOR_ANGLE = 360 / SECTOR_COUNT;
+
+        const menuScreen = document.getElementById('menuScreen');
+        const slotScreen = document.getElementById('slotScreen');
+        const rouletteScreen = document.getElementById('rouletteScreen');
+
+        const goSlots = document.getElementById('goSlots');
+        const goRoulette = document.getElementById('goRoulette');
+        const backButtons = document.querySelectorAll('[data-back]');
+
+        const symbols = ['🍒', '🍋', '🍇', '🔔', '⭐', '7️⃣', '💎'];
+        const reelEls = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+        const slotResult = document.getElementById('slotResult');
+        const spinSlotsBtn = document.getElementById('spinSlots');
+        const randomSlotsBtn = document.getElementById('randomSlots');
+        const slotBalanceTop = document.getElementById('slotBalanceTop');
+
+        const wheel = document.getElementById('wheel');
+        const rouletteResult = document.getElementById('rouletteResult');
+        const spinRouletteBtn = document.getElementById('spinRoulette');
+        const randomRouletteBtn = document.getElementById('randomRoulette');
+        const rouletteBalanceTop = document.getElementById('rouletteBalanceTop');
+
+        const rouletteColorButtons = document.getElementById('rouletteColorButtons');
+        const rouletteBetChips = document.getElementById('rouletteBetChips');
+        const slotBetChips = document.getElementById('slotBetChips');
+
+        const rouletteSegments = Array.from({ length: SECTOR_COUNT }, (_, i) => i === 0 ? 'green' : (i % 2 === 1 ? 'black' : 'red'));
+
+        let balance = START_BALANCE;
+        let slotBet = 50;
+        let rouletteBet = 50;
+        let rouletteColor = 'red';
+        let slotBusy = false;
+        let rouletteBusy = false;
+        let wheelRotation = 0;
+
+        function showScreen(screen) {
+            [menuScreen, slotScreen, rouletteScreen].forEach(s => {
+                s.classList.remove('active');
+                s.classList.add('hidden');
+            });
+            screen.classList.remove('hidden');
+            screen.classList.add('active');
+            refreshBalanceUI();
+        }
+
+        function refreshBalanceUI() {
+            slotBalanceTop.textContent = `Баланс: ${balance} ₽`;
+            rouletteBalanceTop.textContent = `Баланс: ${balance} ₽`;
+        }
+
+        function bindEnter(el, cb) {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    cb();
+                }
+            });
+        }
+
+        function randomSymbol() {
+            return symbols[Math.floor(Math.random() * symbols.length)];
+        }
+
+        function setActiveChip(container, value) {
+            container.querySelectorAll('.bet-chip').forEach(btn => {
+                btn.classList.toggle('active', Number(btn.dataset.bet) === value);
+            });
+        }
+
+        function setActiveOption(container, value) {
+            container.querySelectorAll('.bet-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.color === value);
+            });
+        }
+
+        function canBet(amount) {
+            return amount > 0 && amount <= balance;
+        }
+
+        function normalizeAngle(angle) {
+            return ((angle % 360) + 360) % 360;
+        }
+
+        function getRouletteColorFromRotation(rotation) {
+            const pointerAngle = normalizeAngle(360 - normalizeAngle(rotation));
+            const index = Math.floor(pointerAngle / SECTOR_ANGLE) % SECTOR_COUNT;
+            return rouletteSegments[index];
+        }
+
+        function animateWheelTo(targetRotation, duration = 3200) {
+            return new Promise((resolve) => {
+                const start = performance.now();
+                const from = wheelRotation;
+                const to = targetRotation;
+
+                function easeOutCubic(t) {
+                    return 1 - Math.pow(1 - t, 3);
+                }
+
+                function frame(now) {
+                    const progress = Math.min(1, (now - start) / duration);
+                    const eased = easeOutCubic(progress);
+                    const current = from + (to - from) * eased;
+                    wheel.style.transform = `rotate(${current}deg)`;
+                    if (progress < 1) requestAnimationFrame(frame);
+                    else {
+                        wheelRotation = to;
+                        resolve();
+                    }
+                }
+
+                requestAnimationFrame(frame);
+            });
+        }
+
+        goSlots.addEventListener('click', () => showScreen(slotScreen));
+        goRoulette.addEventListener('click', () => showScreen(rouletteScreen));
+        bindEnter(goSlots, () => showScreen(slotScreen));
+        bindEnter(goRoulette, () => showScreen(rouletteScreen));
+        backButtons.forEach(btn => btn.addEventListener('click', () => showScreen(menuScreen)));
+
+        slotBetChips.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-bet]');
+            if (!btn) return;
+            slotBet = Number(btn.dataset.bet);
+            setActiveChip(slotBetChips, slotBet);
+            slotResult.textContent = `Ставка: ${slotBet} ₽`;
+        });
+
+        rouletteBetChips.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-bet]');
+            if (!btn) return;
+            rouletteBet = Number(btn.dataset.bet);
+            setActiveChip(rouletteBetChips, rouletteBet);
+            rouletteResult.textContent = `Ставка: ${rouletteBet} ₽`;
+        });
+
+        rouletteColorButtons.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-color]');
+            if (!btn) return;
+            rouletteColor = btn.dataset.color;
+            setActiveOption(rouletteColorButtons, rouletteColor);
+            rouletteResult.textContent = rouletteColor === 'red' ? 'Выбрано: красное' : rouletteColor === 'black' ? 'Выбрано: чёрное' : 'Выбрано: зелёное';
+        });
+
+        function spinSlots() {
+            if (slotBusy) return;
+            if (!canBet(slotBet)) {
+                slotResult.textContent = 'Недостаточно денег.';
+                return;
+            }
+
+            slotBusy = true;
+            spinSlotsBtn.disabled = true;
+            randomSlotsBtn.disabled = true;
+            balance -= slotBet;
+            refreshBalanceUI();
+            slotResult.textContent = '';
+
+            const finalValues = [randomSymbol(), randomSymbol(), randomSymbol()];
+            const stopDelays = [1100, 1550, 2000];
+
+            reelEls.forEach((reel, index) => {
+                reel.classList.add('spinning');
+                const ticker = setInterval(() => {
+                    reel.textContent = randomSymbol();
+                }, 55);
+
+                setTimeout(() => {
+                    clearInterval(ticker);
+                    reel.textContent = finalValues[index];
+                    reel.classList.remove('spinning');
+
+                    if (index === 2) {
+                        const allSame = finalValues.every(v => v === finalValues[0]);
+                        const twoSame = !allSame && (finalValues[0] === finalValues[1] || finalValues[0] === finalValues[2] || finalValues[1] === finalValues[2]);
+                        let win = 0;
+                        let msg = `Выпало: ${finalValues.join(' ')}`;
+
+                        if (allSame) {
+                            win = slotBet * 8;
+                            msg = `Джекпот! ${finalValues.join(' ')} +${win} ₽`;
+                        } else if (twoSame) {
+                            win = slotBet * 2;
+                            msg = `Почти! ${finalValues.join(' ')} +${win} ₽`;
+                        } else {
+                            msg = `Не повезло: ${finalValues.join(' ')}`;
+                        }
+
+                        balance += win;
+                        slotResult.textContent = msg;
+                        slotBusy = false;
+                        spinSlotsBtn.disabled = false;
+                        randomSlotsBtn.disabled = false;
+                        refreshBalanceUI();
+                    }
+                }, stopDelays[index]);
+            });
+        }
+
+        function randomizeSlots() {
+            if (slotBusy) return;
+            reelEls.forEach(reel => reel.textContent = randomSymbol());
+            slotResult.textContent = 'Символы сменены.';
+        }
+
+        function spinRoulette() {
+            if (rouletteBusy) return;
+            if (!canBet(rouletteBet)) {
+                rouletteResult.textContent = 'Недостаточно денег.';
+                return;
+            }
+
+            rouletteBusy = true;
+            spinRouletteBtn.disabled = true;
+            randomRouletteBtn.disabled = true;
+            balance -= rouletteBet;
+            refreshBalanceUI();
+            rouletteResult.textContent = '';
+
+            const landingIndex = Math.floor(Math.random() * SECTOR_COUNT);
+            const centerAngle = landingIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2;
+            const targetRotation = normalizeAngle(360 - centerAngle);
+            const finalRotation = wheelRotation + 5 * 360 + targetRotation;
+
+            animateWheelTo(finalRotation, 3300).then(() => {
+                const landedColor = getRouletteColorFromRotation(wheelRotation);
+                let win = 0;
+                let status = landedColor === 'green' ? 'Выпало зелёное.' : landedColor === 'red' ? 'Выпало красное.' : 'Выпало чёрное.';
+
+                if (rouletteColor === landedColor) {
+                    win = rouletteColor === 'green' ? rouletteBet * 8 : rouletteBet * 2;
+                    status += ` +${win} ₽`;
+                }
+
+                balance += win;
+                rouletteResult.textContent = status;
+                rouletteBusy = false;
+                spinRouletteBtn.disabled = false;
+                randomRouletteBtn.disabled = false;
+                refreshBalanceUI();
+            });
+        }
+
+        function randomRoulette() {
+            if (rouletteBusy) return;
+            rouletteResult.textContent = `Случайное число: ${Math.floor(Math.random() * 37)}`;
+        }
+
+        spinSlotsBtn.addEventListener('click', spinSlots);
+        randomSlotsBtn.addEventListener('click', randomizeSlots);
+        spinRouletteBtn.addEventListener('click', spinRoulette);
+        randomRouletteBtn.addEventListener('click', randomRoulette);
+
+        refreshBalanceUI();
+    </script>
+
+    <script>
+        // Дополнения поверх исходного скрипта, без удаления исходных строк.
+        (() => {
+            const addMoneyButtons = document.querySelectorAll('[data-add-money]');
+            const slotWeights = [
+                ['🍒', 34],
+                ['🍋', 27],
+                ['🍇', 18],
+                ['🔔', 10],
+                ['⭐', 6],
+                ['7️⃣', 3],
+                ['💎', 2]
+            ];
+            const slotPool = slotWeights.flatMap(([symbol, weight]) => Array(weight).fill(symbol));
+
+            function weightedRandomSymbol() {
+                return slotPool[Math.floor(Math.random() * slotPool.length)];
+            }
+
+            function addMoney() {
+                balance += 1000;
+                refreshBalanceUI();
+                if (menuScreen.classList.contains('active')) return;
+                const activeResult = document.querySelector('.screen.active .result, .screen.active .roulette-result');
+                if (activeResult) activeResult.textContent = '+1000 ₽ добавлено на баланс';
+            }
+
+            addMoneyButtons.forEach(btn => btn.addEventListener('click', addMoney));
+
+            // Подменяем генерацию символов на более "казиношную" без удаления исходной функции.
+            window.randomSymbol = weightedRandomSymbol;
+
+            // Патчим кручение слота: те же элементы и интерфейс, но реальные вероятности через веса.
+            spinSlotsBtn.addEventListener('click', (e) => {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+
+                if (slotBusy) return;
+                if (!canBet(slotBet)) {
+                    slotResult.textContent = 'Недостаточно денег.';
+                    return;
+                }
+
+                slotBusy = true;
+                spinSlotsBtn.disabled = true;
+                randomSlotsBtn.disabled = true;
+                balance -= slotBet;
+                refreshBalanceUI();
+                slotResult.textContent = '';
+
+                const finalValues = [weightedRandomSymbol(), weightedRandomSymbol(), weightedRandomSymbol()];
+                const stopDelays = [1100, 1550, 2000];
+
+                reelEls.forEach((reel, index) => {
+                    reel.classList.add('spinning');
+                    const ticker = setInterval(() => {
+                        reel.textContent = weightedRandomSymbol();
+                    }, 55);
+
+                    setTimeout(() => {
+                        clearInterval(ticker);
+                        reel.textContent = finalValues[index];
+                        reel.classList.remove('spinning');
+
+                        if (index === 2) {
+                            const allSame = finalValues.every(v => v === finalValues[0]);
+                            const twoSame = !allSame && (
+                                finalValues[0] === finalValues[1] ||
+                                finalValues[0] === finalValues[2] ||
+                                finalValues[1] === finalValues[2]
+                            );
+
+                            let win = 0;
+                            let msg = `Выпало: ${finalValues.join(' ')}`;
+
+                            if (allSame) {
+                                const jackpotMultipliers = {
+                                    '🍒': 6,
+                                    '🍋': 8,
+                                    '🍇': 10,
+                                    '🔔': 14,
+                                    '⭐': 20,
+                                    '7️⃣': 35,
+                                    '💎': 60
+                                };
+                                win = slotBet * jackpotMultipliers[finalValues[0]];
+                                msg = `Джекпот! ${finalValues.join(' ')} +${win} ₽`;
+                            } else if (twoSame) {
+                                win = slotBet * 2;
+                                msg = `Почти! ${finalValues.join(' ')} +${win} ₽`;
+                            } else {
+                                msg = `Не повезло: ${finalValues.join(' ')}`;
+                            }
+
+                            balance += win;
+                            slotResult.textContent = msg;
+                            slotBusy = false;
+                            spinSlotsBtn.disabled = false;
+                            randomSlotsBtn.disabled = false;
+                            refreshBalanceUI();
+                        }
+                    }, stopDelays[index]);
+                });
+            }, true);
+
+            // Патчим рулетку: реальные выплаты для европейской рулетки.
+            spinRouletteBtn.addEventListener('click', (e) => {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+
+                if (rouletteBusy) return;
+                if (!canBet(rouletteBet)) {
+                    rouletteResult.textContent = 'Недостаточно денег.';
+                    return;
+                }
+
+                rouletteBusy = true;
+                spinRouletteBtn.disabled = true;
+                randomRouletteBtn.disabled = true;
+                balance -= rouletteBet;
+                refreshBalanceUI();
+                rouletteResult.textContent = '';
+
+                const landingIndex = Math.floor(Math.random() * SECTOR_COUNT);
+                const centerAngle = landingIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2;
+                const targetRotation = normalizeAngle(360 - centerAngle);
+                const finalRotation = wheelRotation + 5 * 360 + targetRotation;
+
+                animateWheelTo(finalRotation, 3300).then(() => {
+                    const landedColor = getRouletteColorFromRotation(wheelRotation);
+                    let win = 0;
+                    let status = landedColor === 'green' ? 'Выпало зелёное.' : landedColor === 'red' ? 'Выпало красное.' : 'Выпало чёрное.';
+
+                    if (rouletteColor === landedColor) {
+                        win = rouletteColor === 'green' ? rouletteBet * 36 : rouletteBet * 2;
+                        status += ` +${win} ₽`;
+                    }
+
+                    balance += win;
+                    rouletteResult.textContent = status;
+                    rouletteBusy = false;
+                    spinRouletteBtn.disabled = false;
+                    randomRouletteBtn.disabled = false;
+                    refreshBalanceUI();
+                });
+            }, true);
+        })();
+    </script>
+
+    <script>
+        // Дополнение: ва-банк, регистрация и скрытый админ-экран, без удаления старой логики.
+        (() => {
+            const STORAGE_USERS_KEY = 'casinoMiniUsers';
+            const STORAGE_CURRENT_USER_KEY = 'casinoMiniCurrentUser';
+            const ADMIN_CODE = '7777';
+
+            const regNick = document.getElementById('regNick');
+            const regPass = document.getElementById('regPass');
+            const registerUserBtn = document.getElementById('registerUser');
+            const currentUserInfo = document.getElementById('currentUserInfo');
+            const adminUsersList = document.getElementById('adminUsersList');
+            const openAdminBtn = document.getElementById('openAdmin');
+            const adminScreen = document.getElementById('adminScreen');
+            const adminBackBtn = document.querySelector('[data-back-admin]');
+            const slotBetChipsEl = document.getElementById('slotBetChips');
+            const rouletteBetChipsEl = document.getElementById('rouletteBetChips');
+
+            function readUsers() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_USERS_KEY);
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            function writeUsers(users) {
+                try { localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users)); } catch (error) { }
+            }
+
+            function readCurrentUser() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_CURRENT_USER_KEY);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function writeCurrentUser(user) {
+                try { localStorage.setItem(STORAGE_CURRENT_USER_KEY, JSON.stringify(user)); } catch (error) { }
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function renderCurrentUser() {
+                const user = readCurrentUser();
+                if (!currentUserInfo) return;
+
+                if (!user) {
+                    currentUserInfo.innerHTML = '<strong>Сейчас никого нет</strong><small>После регистрации здесь появится текущий игрок.</small>';
+                    return;
+                }
+
+                currentUserInfo.innerHTML = `
+                  <strong>Текущий игрок: ${escapeHtml(user.nick)}</strong>
+                  <small>Пароль: ${escapeHtml(user.pass)}</small>
+                  <small>Зарегистрирован: ${new Date(user.createdAt).toLocaleString('ru-RU')}</small>
+                `;
+            }
+
+            function renderAdminList() {
+                if (!adminUsersList) return;
+                const users = readUsers();
+
+                if (!users.length) {
+                    adminUsersList.innerHTML = '<small>Пока никого нет.</small>';
+                    return;
+                }
+
+                adminUsersList.innerHTML = users.slice().reverse().map((user, index) => `
+                  <div class="admin-row">
+                    <strong>#${users.length - index} — ${escapeHtml(user.nick)}</strong>
+                    <span>Пароль: ${escapeHtml(user.pass)}</span>
+                    <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
+                  </div>
+                `).join('');
+            }
+
+            function showAdminScreen() {
+                renderAdminList();
+                if (authOverlay) authOverlay.classList.add('hidden');
+                showScreen(adminScreen);
+            }
+
+            function registerUser() {
+                const nick = (regNick.value || '').trim();
+                const pass = (regPass.value || '').trim();
+
+                if (nick.length < 2) {
+                    alert('Ник должен быть хотя бы из 2 символов.');
+                    return;
+                }
+                if (pass.length < 2) {
+                    alert('Пароль должен быть хотя бы из 2 символов.');
+                    return;
+                }
+
+                const user = { nick, pass, createdAt: new Date().toISOString() };
+                const users = readUsers();
+                users.push(user);
+                writeUsers(users);
+                writeCurrentUser(user);
+
+                regNick.value = '';
+                regPass.value = '';
+
+                renderCurrentUser();
+                renderAdminList();
+                alert('Пользователь зарегистрирован.');
+            }
+
+            function addAllInButton(container, setter, label) {
+                if (!container || container.querySelector('[data-all-in="true"]')) return;
+
+                const btn = document.createElement('button');
+                btn.className = 'bet-chip';
+                btn.dataset.allIn = 'true';
+                btn.textContent = balance > 0 ? `Ва-банк (${balance} ₽)` : 'Ва-банк';
+                btn.title = `Поставить весь баланс в ${label}`;
+                btn.addEventListener('click', () => {
+                    if (balance <= 0) return;
+                    setter(balance);
+                    container.querySelectorAll('.bet-chip').forEach(el => el.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+                container.appendChild(btn);
+            }
+
+            function syncAllInButtons() {
+                document.querySelectorAll('[data-all-in="true"]').forEach(btn => {
+                    btn.textContent = balance > 0 ? `Ва-банк (${balance} ₽)` : 'Ва-банк';
+                    btn.disabled = balance <= 0;
+                });
+            }
+
+            function initAllInButtons() {
+                addAllInButton(slotBetChipsEl, (value) => {
+                    slotBet = value;
+                    setActiveChip(slotBetChipsEl, slotBet);
+                    slotResult.textContent = `Ставка: ${slotBet} ₽`;
+                }, 'Слоты');
+
+                addAllInButton(rouletteBetChipsEl, (value) => {
+                    rouletteBet = value;
+                    setActiveChip(rouletteBetChipsEl, rouletteBet);
+                    rouletteResult.textContent = `Ставка: ${rouletteBet} ₽`;
+                }, 'Рулетка');
+            }
+
+            if (registerUserBtn) registerUserBtn.addEventListener('click', registerUser);
+
+            if (openAdminBtn) {
+                openAdminBtn.addEventListener('click', () => {
+                    if (authOverlay) authOverlay.classList.add('hidden');
+                    const code = prompt('Введите админ-код:');
+                    if (code === ADMIN_CODE) {
+                        showAdminScreen();
+                    } else if (code !== null) {
+                        syncAuthStateToDom();
+                        alert('Неверный код.');
+                    } else {
+                        syncAuthStateToDom();
+                    }
+                });
+            }
+
+            if (adminBackBtn) {
+                adminBackBtn.addEventListener('click', () => {
+                    showScreen(menuScreen);
+                    syncAuthStateToDom();
+                });
+            }
+
+            renderCurrentUser();
+            initAllInButtons();
+            syncAllInButtons();
+
+            const originalRefreshBalanceUI2 = refreshBalanceUI;
+            refreshBalanceUI = function patchedRefreshBalanceUI2() {
+                originalRefreshBalanceUI2();
+                syncAllInButtons();
+            };
+
+            refreshBalanceUI();
+        })();
+    </script>
+
+    <script>
+        // Дополнение: стартовый вход поверх экрана + сохранение аккаунта и баланса без удаления старой логики.
+        (() => {
+            const AUTH_USERS_KEY = 'casinoMiniUsers';
+            const AUTH_CURRENT_USER_KEY = 'casinoMiniCurrentUser';
+            const authOverlay = document.getElementById('authOverlay');
+            const authNick = document.getElementById('authNick');
+            const authPass = document.getElementById('authPass');
+            const authEnter = document.getElementById('authEnter');
+            const authStatus = document.getElementById('authStatus');
+            const currentUserInfo = document.getElementById('currentUserInfo');
+            const adminUsersList = document.getElementById('adminUsersList');
+            const adminScreen = document.getElementById('adminScreen');
+
+            function safeJsonParse(value, fallback) {
+                try {
+                    const parsed = JSON.parse(value);
+                    return parsed ?? fallback;
+                } catch {
+                    return fallback;
+                }
+            }
+
+            function readUsers() {
+                const raw = localStorage.getItem(AUTH_USERS_KEY);
+                const users = safeJsonParse(raw, []);
+                return Array.isArray(users) ? users : [];
+            }
+
+            function writeUsers(users) {
+                localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
+            }
+
+            function readCurrentUser() {
+                const raw = localStorage.getItem(AUTH_CURRENT_USER_KEY);
+                const user = safeJsonParse(raw, null);
+                return user && typeof user === 'object' ? user : null;
+            }
+
+            function writeCurrentUser(user) {
+                localStorage.setItem(AUTH_CURRENT_USER_KEY, JSON.stringify(user));
+            }
+
+            function normalizeUser(user) {
+                if (!user || typeof user !== 'object') return null;
+                return {
+                    nick: String(user.nick || '').trim(),
+                    pass: String(user.pass || '').trim(),
+                    balance: Number.isFinite(Number(user.balance)) ? Number(user.balance) : START_BALANCE,
+                    createdAt: user.createdAt || new Date().toISOString(),
+                    lastLoginAt: user.lastLoginAt || user.createdAt || new Date().toISOString()
+                };
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function persistCurrentBalance() {
+                const current = normalizeUser(readCurrentUser());
+                if (!current) return;
+                current.balance = Number(balance) || 0;
+                current.lastLoginAt = new Date().toISOString();
+                writeCurrentUser(current);
+
+                const users = readUsers().map(normalizeUser).filter(Boolean);
+                const idx = users.findIndex(u => u.nick === current.nick && u.pass === current.pass);
+                if (idx >= 0) {
+                    users[idx] = { ...users[idx], balance: current.balance, lastLoginAt: current.lastLoginAt };
+                } else {
+                    users.push(current);
+                }
+                writeUsers(users);
+            }
+
+            function setCurrentUser(user) {
+                const normalized = normalizeUser(user);
+                if (!normalized) return;
+                normalized.lastLoginAt = new Date().toISOString();
+                writeCurrentUser(normalized);
+                balance = normalized.balance;
+                refreshBalanceUI();
+                updateCurrentUserCard();
+                updateAdminList();
+            }
+
+            function updateCurrentUserCard() {
+                if (!currentUserInfo) return;
+                const user = normalizeUser(readCurrentUser());
+                if (!user) {
+                    currentUserInfo.innerHTML = '<strong>Сейчас никого нет</strong><small>После входа здесь появится текущий игрок.</small>';
+                    return;
+                }
+
+                currentUserInfo.innerHTML = `
+                  <strong>Текущий игрок: ${escapeHtml(user.nick)}</strong>
+                  <small>Пароль: ${escapeHtml(user.pass)}</small>
+                  <small>Баланс: ${Number(user.balance || 0)} ₽</small>
+                  <small>Зарегистрирован: ${new Date(user.createdAt).toLocaleString('ru-RU')}</small>
+                  <small>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</small>
+                `;
+            }
+
+            function updateAdminList() {
+                if (!adminUsersList) return;
+                const users = readUsers().map(normalizeUser).filter(Boolean);
+
+                if (!users.length) {
+                    adminUsersList.innerHTML = '<small>Пока никого нет.</small>';
+                    return;
+                }
+
+                adminUsersList.innerHTML = users.slice().reverse().map((user, index) => `
+                  <div class="admin-row">
+                    <strong>#${users.length - index} — ${escapeHtml(user.nick)}</strong>
+                    <span>Пароль: ${escapeHtml(user.pass)}</span>
+                    <span>Баланс: ${Number(user.balance || 0)} ₽</span>
+                    <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
+                    <span>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</span>
+                  </div>
+                `).join('');
+            }
+
+            function openAuth() {
+                authOverlay.classList.remove('hidden');
+                authStatus.textContent = '';
+                authNick.focus();
+            }
+
+            function closeAuth() {
+                authOverlay.classList.add('hidden');
+                updateCurrentUserCard();
+            }
+
+            function loginOrRegister() {
+                const nick = authNick.value.trim();
+                const pass = authPass.value.trim();
+
+                if (nick.length < 2) {
+                    authStatus.textContent = 'Ник должен быть хотя бы из 2 символов.';
+                    return;
+                }
+                if (pass.length < 2) {
+                    authStatus.textContent = 'Пароль должен быть хотя бы из 2 символов.';
+                    return;
+                }
+
+                const users = readUsers().map(normalizeUser).filter(Boolean);
+                const existing = users.find(u => u.nick === nick && u.pass === pass);
+
+                if (existing) {
+                    existing.lastLoginAt = new Date().toISOString();
+                    writeCurrentUser(existing);
+                    balance = Number(existing.balance || START_BALANCE);
+                    writeUsers(users.map(u => (u.nick === existing.nick && u.pass === existing.pass) ? existing : u));
+                    authStatus.textContent = `С возвращением, ${nick}.`;
+                } else {
+                    const newUser = {
+                        nick,
+                        pass,
+                        balance: START_BALANCE,
+                        createdAt: new Date().toISOString(),
+                        lastLoginAt: new Date().toISOString()
+                    };
+                    users.push(newUser);
+                    writeUsers(users);
+                    writeCurrentUser(newUser);
+                    balance = START_BALANCE;
+                    authStatus.textContent = `Аккаунт создан: ${nick}.`;
+                }
+
+                if (typeof refreshBalanceUI === 'function') refreshBalanceUI();
+                updateCurrentUserCard();
+                updateAdminList();
+                closeAuth();
+            }
+
+            function shouldShowAuth() {
+                const current = normalizeUser(readCurrentUser());
+                if (!current) return true;
+
+                balance = Number.isFinite(Number(current.balance)) ? Number(current.balance) : START_BALANCE;
+                writeCurrentUser({ ...current, balance });
+                return false;
+            }
+
+            function syncAuthStateToDom() {
+                updateCurrentUserCard();
+                updateAdminList();
+                if (shouldShowAuth()) openAuth();
+                else closeAuth();
+            }
+
+            authEnter.addEventListener('click', loginOrRegister);
+            [authNick, authPass].forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') loginOrRegister();
+                });
+            });
+
+            // Перехватываем старую кнопку регистрации, чтобы не было двойного срабатывания старой логики.
+            const oldRegisterBtn = document.getElementById('registerUser');
+            if (oldRegisterBtn) {
+                oldRegisterBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    loginOrRegister();
+                }, true);
+            }
+
+            // Ва-банк синхронизируем с сохранением баланса.
+            const originalRefreshBalanceUI = refreshBalanceUI;
+            refreshBalanceUI = function patchedRefreshBalanceUI() {
+                originalRefreshBalanceUI();
+                persistCurrentBalance();
+                const allInButtons = document.querySelectorAll('[data-all-in="true"]');
+                allInButtons.forEach(btn => {
+                    btn.textContent = balance > 0 ? `Ва-банк (${balance} ₽)` : 'Ва-банк';
+                    btn.disabled = balance <= 0;
+                });
+            };
+
+            // Если админ-экран открыли старой логикой, подменим список на версию с балансом.
+            if (adminScreen) {
+                const observer = new MutationObserver(() => {
+                    if (adminScreen.classList.contains('active')) {
+                        updateAdminList();
+                    }
+                });
+                observer.observe(adminScreen, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            window.addEventListener('beforeunload', persistCurrentBalance);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') persistCurrentBalance();
+            });
+
+            // При заходе подтянуть сохранённую сессию, если она есть.
+            syncAuthStateToDom();
+            refreshBalanceUI();
+        })();
+    </script>
+    <script>
+        (() => {
+            const BONUS_DELAY = 30 * 60 * 1000;
+            const BONUS_AMOUNT = 2000;
+            const USERS_KEY = 'casinoMiniUsers';
+            const CURRENT_KEY = 'casinoMiniCurrentUser';
+            const ADMIN_CODE = '7777';
+
+            const menuScreen = document.getElementById('menuScreen');
+            const slotScreen = document.getElementById('slotScreen');
+            const rouletteScreen = document.getElementById('rouletteScreen');
+            const adminScreen = document.getElementById('adminScreen');
+            const authOverlay = document.getElementById('authOverlay');
+            const bonusTimers = Array.from(document.querySelectorAll('[data-bonus-timer]'));
+            const adminUsersList = document.getElementById('adminUsersList');
+
+            const originalOpenAdmin = document.getElementById('openAdmin');
+            const originalBackBtn = document.querySelector('[data-back-admin]');
+
+            function safeParse(raw, fallback) {
+                try {
+                    return raw ? JSON.parse(raw) : fallback;
+                } catch {
+                    return fallback;
+                }
+            }
+
+            function normalizeUser(user) {
+                if (!user || typeof user !== 'object') return null;
+                return {
+                    nick: String(user.nick || '').trim(),
+                    pass: String(user.pass || '').trim(),
+                    balance: Number.isFinite(Number(user.balance)) ? Number(user.balance) : 0,
+                    createdAt: user.createdAt || new Date().toISOString(),
+                    lastLoginAt: user.lastLoginAt || user.createdAt || new Date().toISOString(),
+                    zeroAt: Number.isFinite(Number(user.zeroAt)) ? Number(user.zeroAt) : null,
+                    bonusGrantedAt: Number.isFinite(Number(user.bonusGrantedAt)) ? Number(user.bonusGrantedAt) : null
+                };
+            }
+
+            function readUsers() {
+                return (safeParse(localStorage.getItem(USERS_KEY), []) || []).map(normalizeUser).filter(Boolean);
+            }
+
+            function writeUsers(users) {
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            }
+
+            function readCurrentUser() {
+                return normalizeUser(safeParse(localStorage.getItem(CURRENT_KEY), null));
+            }
+
+            function writeCurrentUser(user) {
+                const normalized = normalizeUser(user);
+                if (!normalized) return;
+                localStorage.setItem(CURRENT_KEY, JSON.stringify(normalized));
+            }
+
+            function persistUser(user) {
+                const normalized = normalizeUser(user);
+                if (!normalized) return;
+
+                const users = readUsers();
+                const index = users.findIndex((item) => item.nick === normalized.nick && item.pass === normalized.pass);
+                if (index >= 0) users[index] = { ...users[index], ...normalized };
+                else users.push(normalized);
+
+                writeUsers(users);
+                writeCurrentUser(normalized);
+            }
+
+            function setGlobalBalance(value) {
+                if (typeof balance !== 'undefined') {
+                    balance = Number(value) || 0;
+                }
+            }
+
+            function getGlobalBalance() {
+                return typeof balance !== 'undefined' ? Number(balance) || 0 : 0;
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function formatTime(ms) {
+                const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            function clearScreens() {
+                [menuScreen, slotScreen, rouletteScreen, adminScreen].forEach((screen) => {
+                    if (!screen) return;
+                    screen.classList.remove('active');
+                    screen.classList.add('hidden');
+                    screen.style.removeProperty('display');
+                    screen.style.removeProperty('pointer-events');
+                });
+                if (authOverlay) {
+                    authOverlay.classList.add('hidden');
+                    authOverlay.style.removeProperty('display');
+                    authOverlay.style.removeProperty('pointer-events');
+                }
+                document.body.style.pointerEvents = '';
+                document.documentElement.style.pointerEvents = '';
+            }
+
+            function showScreenSafe(screen) {
+                clearScreens();
+                if (!screen) return;
+                screen.classList.remove('hidden');
+                screen.classList.add('active');
+                screen.style.removeProperty('display');
+                screen.style.pointerEvents = 'auto';
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            }
+
+            function openAdmin() {
+                showScreenSafe(adminScreen);
+                renderAdminUsers();
+            }
+
+            function goMenu() {
+                showScreenSafe(menuScreen);
+            }
+
+            function getRemaining(user) {
+                if (!user || !user.zeroAt) return null;
+                const elapsed = Date.now() - Number(user.zeroAt);
+                return Math.max(0, BONUS_DELAY - elapsed);
+            }
+
+            function renderTimer(user = readCurrentUser()) {
+                let text = 'Бонус: не активен';
+                let modeClass = 'cooldown';
+
+                if (user && user.balance <= 0) {
+                    const remaining = getRemaining(user);
+                    if (remaining === null) {
+                        text = 'Бонус: 30:00';
+                    } else if (remaining > 0) {
+                        text = `Бонус через ${formatTime(remaining)}`;
+                    } else {
+                        text = 'Бонус готов!';
+                        modeClass = 'ready';
+                    }
+                }
+
+                bonusTimers.forEach((el) => {
+                    el.textContent = text;
+                    el.classList.remove('ready', 'cooldown');
+                    el.classList.add(modeClass);
+                });
+            }
+
+            function renderAdminUsers() {
+                if (!adminUsersList) return;
+                const users = readUsers();
+                if (!users.length) {
+                    adminUsersList.innerHTML = '<small>Пока никого нет.</small>';
+                    return;
+                }
+
+                const html = users.slice().reverse().map((user, index) => `
+                        <div class="admin-row">
+                            <strong>#${users.length - index} — ${String(user.nick).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]))}</strong>
+                            <span>Пароль: ${String(user.pass).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]))}</span>
+                            <span>Баланс: ${Number(user.balance || 0)} ₽</span>
+                            <span>Максимальный баланс: ${Number(user.maxBalance || user.balance || 0)} ₽</span>
+                            <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
+                            <span>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</span>
+                        </div>
+                    `).join('');
+
+                adminUsersList.innerHTML = html;
+            }
+
+            function syncTimerState() {
+                const current = readCurrentUser();
+                if (!current) {
+                    renderTimer(null);
+                    return;
+                }
+
+                let next = { ...current };
+                const liveBalance = getGlobalBalance();
+                if (Number.isFinite(liveBalance) && liveBalance !== next.balance) {
+                    next.balance = liveBalance;
+                }
+
+                next.lastLoginAt = next.lastLoginAt || new Date().toISOString();
+
+                if (next.balance <= 0) {
+                    if (!next.zeroAt) next.zeroAt = Date.now();
+                    const remaining = getRemaining(next);
+                    if (remaining !== null && remaining <= 0 && !next.bonusGrantedAt) {
+                        next.balance = BONUS_AMOUNT;
+                        next.zeroAt = null;
+                        next.bonusGrantedAt = Date.now();
+                        setGlobalBalance(next.balance);
+
+                        const resultBox = document.getElementById('slotResult') || document.getElementById('rouletteResult');
+                        if (resultBox) resultBox.textContent = `Бонус +${BONUS_AMOUNT} ₽ начислен за 0 баланс.`;
+                    }
+                } else {
+                    next.zeroAt = null;
+                    next.bonusGrantedAt = null;
+                }
+
+                next.balance = Number(next.balance) || 0;
+                persistUser(next);
+                setGlobalBalance(next.balance);
+                renderTimer(next);
+            }
+
+            function heartbeat() {
+                syncTimerState();
+                if (adminScreen && adminScreen.classList.contains('active')) {
+                    renderAdminUsers();
+                }
+            }
+
+            if (originalOpenAdmin && originalOpenAdmin.parentNode) {
+                const openAdminBtn = originalOpenAdmin.cloneNode(true);
+                originalOpenAdmin.parentNode.replaceChild(openAdminBtn, originalOpenAdmin);
+                openAdminBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const code = prompt('Введите админ-код:');
+                    if (code === ADMIN_CODE) {
+                        openAdmin();
+                    } else if (code !== null) {
+                        alert('Неверный код.');
+                        goMenu();
+                    } else {
+                        goMenu();
+                    }
+                }, true);
+            }
+
+            if (originalBackBtn && originalBackBtn.parentNode) {
+                const backBtn = originalBackBtn.cloneNode(true);
+                originalBackBtn.parentNode.replaceChild(backBtn, originalBackBtn);
+                backBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    goMenu();
+                }, true);
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && adminScreen && adminScreen.classList.contains('active')) {
+                    goMenu();
+                }
+            });
+
+            window.addEventListener('storage', heartbeat);
+            window.addEventListener('focus', heartbeat);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') heartbeat();
+            });
+
+            setInterval(heartbeat, 1000);
+            heartbeat();
+        })();
+    </script>
+
+    <script>
+        (() => {
+            const USERS_KEY = 'casinoMiniUsers';
+            const CURRENT_KEY = 'casinoMiniCurrentUser';
+            const BONUS_DELAY = 30 * 60 * 1000;
+            const BONUS_AMOUNT = 2000;
+
+            function safeParse(raw, fallback) {
+                try {
+                    return raw ? JSON.parse(raw) : fallback;
+                } catch {
+                    return fallback;
+                }
+            }
+
+            function normalizeUser(user) {
+                if (!user || typeof user !== 'object') return null;
+                return {
+                    nick: String(user.nick || '').trim(),
+                    pass: String(user.pass || '').trim(),
+                    balance: Number.isFinite(Number(user.balance)) ? Number(user.balance) : 0,
+                    createdAt: user.createdAt || new Date().toISOString(),
+                    lastLoginAt: user.lastLoginAt || user.createdAt || new Date().toISOString(),
+                    zeroAt: Number.isFinite(Number(user.zeroAt)) ? Number(user.zeroAt) : null,
+                    bonusGrantedAt: Number.isFinite(Number(user.bonusGrantedAt)) ? Number(user.bonusGrantedAt) : null
+                };
+            }
+
+            function readUsers() {
+                return (safeParse(localStorage.getItem(USERS_KEY), []) || []).map(normalizeUser).filter(Boolean);
+            }
+
+            function writeUsers(users) {
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            }
+
+            function readCurrentUser() {
+                return normalizeUser(safeParse(localStorage.getItem(CURRENT_KEY), null));
+            }
+
+            function writeCurrentUser(user) {
+                const normalized = normalizeUser(user);
+                if (!normalized) return;
+                localStorage.setItem(CURRENT_KEY, JSON.stringify(normalized));
+            }
+
+            function persistCurrentBalance() {
+                const current = readCurrentUser();
+                if (!current) return;
+
+                const liveBalance = Number(balance);
+                if (Number.isFinite(liveBalance)) {
+                    current.balance = liveBalance;
+                }
+
+                if (current.balance <= 0) {
+                    if (!current.zeroAt) current.zeroAt = Date.now();
+                    current.bonusGrantedAt = current.bonusGrantedAt || null;
+                } else {
+                    current.zeroAt = null;
+                    current.bonusGrantedAt = null;
+                }
+
+                current.lastLoginAt = new Date().toISOString();
+                writeCurrentUser(current);
+
+                const users = readUsers();
+                const idx = users.findIndex((u) => u.nick === current.nick && u.pass === current.pass);
+                if (idx >= 0) users[idx] = { ...users[idx], ...current };
+                else users.push(current);
+                writeUsers(users);
+            }
+
+            function formatTime(ms) {
+                const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            function updateBonusTimer(user = readCurrentUser()) {
+                const timers = document.querySelectorAll('[data-bonus-timer]');
+                if (!timers.length) return;
+
+                let text = 'Бонус: не активен';
+                let mode = 'cooldown';
+
+                if (user && user.balance <= 0) {
+                    if (!user.zeroAt) {
+                        text = 'Бонус: 30:00';
+                    } else {
+                        const remaining = BONUS_DELAY - (Date.now() - Number(user.zeroAt));
+                        if (remaining > 0) {
+                            text = `Бонус через ${formatTime(remaining)}`;
+                        } else {
+                            text = 'Бонус готов!';
+                            mode = 'ready';
+                        }
+                    }
+                }
+
+                timers.forEach((el) => {
+                    el.textContent = text;
+                    el.classList.remove('ready', 'cooldown');
+                    el.classList.add(mode);
+                });
+            }
+
+            function awardBonusIfDue() {
+                const current = readCurrentUser();
+                if (!current) {
+                    updateBonusTimer(null);
+                    return;
+                }
+
+                let changed = false;
+                const liveBalance = Number(balance);
+                if (Number.isFinite(liveBalance) && liveBalance !== current.balance) {
+                    current.balance = liveBalance;
+                    changed = true;
+                }
+
+                if (current.balance <= 0) {
+                    if (!current.zeroAt) {
+                        current.zeroAt = Date.now();
+                        changed = true;
+                    }
+
+                    const remaining = BONUS_DELAY - (Date.now() - Number(current.zeroAt));
+                    if (remaining <= 0 && !current.bonusGrantedAt) {
+                        current.balance = BONUS_AMOUNT;
+                        current.zeroAt = null;
+                        current.bonusGrantedAt = Date.now();
+                        balance = BONUS_AMOUNT;
+                        changed = true;
+
+                        const resultBox = document.getElementById('slotResult') || document.getElementById('rouletteResult');
+                        if (resultBox) {
+                            resultBox.textContent = `Бонус +${BONUS_AMOUNT} ₽ начислен.`;
+                        }
+                    }
+                } else {
+                    if (current.zeroAt !== null || current.bonusGrantedAt !== null) {
+                        current.zeroAt = null;
+                        current.bonusGrantedAt = null;
+                        changed = true;
+                    }
+                }
+
+                if (changed) {
+                    current.lastLoginAt = new Date().toISOString();
+                    writeCurrentUser(current);
+                    const users = readUsers();
+                    const idx = users.findIndex((u) => u.nick === current.nick && u.pass === current.pass);
+                    if (idx >= 0) users[idx] = { ...users[idx], ...current };
+                    else users.push(current);
+                    writeUsers(users);
+                }
+
+                if (Number.isFinite(Number(current.balance))) {
+                    balance = Number(current.balance);
+                }
+
+                updateBonusTimer(current);
+            }
+
+            const previousRefreshBalanceUI = typeof refreshBalanceUI === 'function' ? refreshBalanceUI : null;
+            refreshBalanceUI = function refreshedBalanceUI() {
+                if (previousRefreshBalanceUI) previousRefreshBalanceUI();
+                persistCurrentBalance();
+                awardBonusIfDue();
+            };
+
+            window.addEventListener('focus', awardBonusIfDue);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') awardBonusIfDue();
+                else persistCurrentBalance();
+            });
+            window.addEventListener('storage', awardBonusIfDue);
+            setInterval(awardBonusIfDue, 1000);
+            awardBonusIfDue();
+        })();
+    </script>
+</body>
+</html>
