@@ -1773,20 +1773,45 @@
                 closeAuth();
             }
 
+            function getMostRecentSavedUser() {
+                const users = readUsers().map(normalizeUser).filter(Boolean);
+                if (!users.length) return null;
+
+                return users.slice().sort((a, b) => {
+                    const aTime = new Date(a.lastLoginAt || a.createdAt).getTime();
+                    const bTime = new Date(b.lastLoginAt || b.createdAt).getTime();
+                    return bTime - aTime;
+                })[0];
+            }
+
             function shouldShowAuth() {
                 const current = normalizeUser(readCurrentUser());
-                if (!current) return true;
+                if (current) {
+                    balance = Number.isFinite(Number(current.balance)) ? Number(current.balance) : START_BALANCE;
+                    writeCurrentUser({ ...current, balance });
+                    return false;
+                }
 
-                balance = Number.isFinite(Number(current.balance)) ? Number(current.balance) : START_BALANCE;
-                writeCurrentUser({ ...current, balance });
-                return false;
+                const fallback = getMostRecentSavedUser();
+                if (fallback) {
+                    balance = Number.isFinite(Number(fallback.balance)) ? Number(fallback.balance) : START_BALANCE;
+                    writeCurrentUser({ ...fallback, balance, lastLoginAt: new Date().toISOString() });
+                    return false;
+                }
+
+                return true;
             }
 
             function syncAuthStateToDom() {
-                updateCurrentUserCard();
-                updateAdminList();
-                if (shouldShowAuth()) openAuth();
-                else closeAuth();
+                if (shouldShowAuth()) {
+                    updateCurrentUserCard();
+                    updateAdminList();
+                    openAuth();
+                } else {
+                    updateCurrentUserCard();
+                    updateAdminList();
+                    closeAuth();
+                }
             }
 
             authEnter.addEventListener('click', loginOrRegister);
