@@ -1447,10 +1447,10 @@
                 }
 
                 currentUserInfo.innerHTML = `
-                  <strong>Текущий игрок: ${escapeHtml(user.nick)}</strong>
-                  <small>Пароль: ${escapeHtml(user.pass)}</small>
-                  <small>Зарегистрирован: ${new Date(user.createdAt).toLocaleString('ru-RU')}</small>
-                `;
+                      <strong>Текущий игрок: ${escapeHtml(user.nick)}</strong>
+                      <small>Пароль: ${escapeHtml(user.pass)}</small>
+                      <small>Зарегистрирован: ${new Date(user.createdAt).toLocaleString('ru-RU')}</small>
+                    `;
             }
 
             function renderAdminList() {
@@ -1463,12 +1463,12 @@
                 }
 
                 adminUsersList.innerHTML = users.slice().reverse().map((user, index) => `
-                  <div class="admin-row">
-                    <strong>#${users.length - index} — ${escapeHtml(user.nick)}</strong>
-                    <span>Пароль: ${escapeHtml(user.pass)}</span>
-                    <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
-                  </div>
-                `).join('');
+                      <div class="admin-row">
+                        <strong>#${users.length - index} — ${escapeHtml(user.nick)}</strong>
+                        <span>Пароль: ${escapeHtml(user.pass)}</span>
+                        <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
+                      </div>
+                    `).join('');
             }
 
             function showAdminScreen() {
@@ -1630,7 +1630,9 @@
                     pass: String(user.pass || '').trim(),
                     balance: Number.isFinite(Number(user.balance)) ? Number(user.balance) : START_BALANCE,
                     createdAt: user.createdAt || new Date().toISOString(),
-                    lastLoginAt: user.lastLoginAt || user.createdAt || new Date().toISOString()
+                    lastLoginAt: user.lastLoginAt || user.createdAt || new Date().toISOString(),
+                    zeroAt: Number.isFinite(Number(user.zeroAt)) ? Number(user.zeroAt) : null,
+                    bonusGrantedAt: Number.isFinite(Number(user.bonusGrantedAt)) ? Number(user.bonusGrantedAt) : null
                 };
             }
 
@@ -1647,13 +1649,22 @@
                 const current = normalizeUser(readCurrentUser());
                 if (!current) return;
                 current.balance = Number(balance) || 0;
+
+                if (current.balance <= 0) {
+                    if (!current.zeroAt) current.zeroAt = Date.now();
+                    current.bonusGrantedAt = current.bonusGrantedAt || null;
+                } else {
+                    current.zeroAt = null;
+                    current.bonusGrantedAt = null;
+                }
+
                 current.lastLoginAt = new Date().toISOString();
                 writeCurrentUser(current);
 
                 const users = readUsers().map(normalizeUser).filter(Boolean);
                 const idx = users.findIndex(u => u.nick === current.nick && u.pass === current.pass);
                 if (idx >= 0) {
-                    users[idx] = { ...users[idx], balance: current.balance, lastLoginAt: current.lastLoginAt };
+                    users[idx] = { ...users[idx], ...current };
                 } else {
                     users.push(current);
                 }
@@ -1680,12 +1691,12 @@
                 }
 
                 currentUserInfo.innerHTML = `
-                  <strong>Текущий игрок: ${escapeHtml(user.nick)}</strong>
-                  <small>Пароль: ${escapeHtml(user.pass)}</small>
-                  <small>Баланс: ${Number(user.balance || 0)} ₽</small>
-                  <small>Зарегистрирован: ${new Date(user.createdAt).toLocaleString('ru-RU')}</small>
-                  <small>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</small>
-                `;
+                      <strong>Текущий игрок: ${escapeHtml(user.nick)}</strong>
+                      <small>Пароль: ${escapeHtml(user.pass)}</small>
+                      <small>Баланс: ${Number(user.balance || 0)} ₽</small>
+                      <small>Зарегистрирован: ${new Date(user.createdAt).toLocaleString('ru-RU')}</small>
+                      <small>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</small>
+                    `;
             }
 
             function updateAdminList() {
@@ -1698,14 +1709,14 @@
                 }
 
                 adminUsersList.innerHTML = users.slice().reverse().map((user, index) => `
-                  <div class="admin-row">
-                    <strong>#${users.length - index} — ${escapeHtml(user.nick)}</strong>
-                    <span>Пароль: ${escapeHtml(user.pass)}</span>
-                    <span>Баланс: ${Number(user.balance || 0)} ₽</span>
-                    <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
-                    <span>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</span>
-                  </div>
-                `).join('');
+                      <div class="admin-row">
+                        <strong>#${users.length - index} — ${escapeHtml(user.nick)}</strong>
+                        <span>Пароль: ${escapeHtml(user.pass)}</span>
+                        <span>Баланс: ${Number(user.balance || 0)} ₽</span>
+                        <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
+                        <span>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</span>
+                      </div>
+                    `).join('');
             }
 
             function openAuth() {
@@ -1998,15 +2009,15 @@
                 }
 
                 const html = users.slice().reverse().map((user, index) => `
-                        <div class="admin-row">
-                            <strong>#${users.length - index} — ${String(user.nick).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]))}</strong>
-                            <span>Пароль: ${String(user.pass).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]))}</span>
-                            <span>Баланс: ${Number(user.balance || 0)} ₽</span>
-                            <span>Максимальный баланс: ${Number(user.maxBalance || user.balance || 0)} ₽</span>
-                            <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
-                            <span>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</span>
-                        </div>
-                    `).join('');
+                            <div class="admin-row">
+                                <strong>#${users.length - index} — ${String(user.nick).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]))}</strong>
+                                <span>Пароль: ${String(user.pass).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]))}</span>
+                                <span>Баланс: ${Number(user.balance || 0)} ₽</span>
+                                <span>Максимальный баланс: ${Number(user.maxBalance || user.balance || 0)} ₽</span>
+                                <span>Время: ${new Date(user.createdAt).toLocaleString('ru-RU')}</span>
+                                <span>Последний вход: ${new Date(user.lastLoginAt || user.createdAt).toLocaleString('ru-RU')}</span>
+                            </div>
+                        `).join('');
 
                 adminUsersList.innerHTML = html;
             }
@@ -2283,6 +2294,7 @@
             setInterval(awardBonusIfDue, 1000);
             awardBonusIfDue();
         })();
+
     </script>
 </body>
 </html>
